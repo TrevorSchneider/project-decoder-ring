@@ -1,39 +1,45 @@
-const expect = require("chai").expect;
-
-const polybius = require("../src/polybius");
-
-describe("polybius", () => {
-  it("outputs a string when encoding", () => {
-    const actual = polybius("string");
-    expect(actual).to.be.a('string');
-  });
-  it("returns false if the string to be decoded minus whitespace isn't even", () => {
-    const actual = polybius("12345 ", false);
-    expect(actual).to.be.false;
-  });
-  it("encodes a single word", () => {
-    const expected = "311144";
-    const actual = polybius("cat");
-    expect(actual).to.equal(expected);
-  });
-  it("leaves whitespace untouched", () => {
-    const expected = "11 311144";
-    const actual = polybius("a cat");
-    expect(actual).to.equal(expected);
-  });
-  it("is case insensitive", () => {
-    const expected = "11 311144";
-    const actual = polybius("A cAT");
-    expect(actual).to.equal(expected);
-  });
-  it("decodes a simple string", () => {
-    const expected = "cat";
-    const actual = polybius("311144", false);
-    expect(actual).to.equal(expected);
-  });
-  it("decodes 42 (i and j) as (i/j)", () => {
-    const expected = "th(i/j)s (i/j)s (i/j)t";
-    const actual = polybius("44324234 4234 4244", false);
-    expect(actual).to.equal(expected);
-  });
-});
+const expect = require("chai").expect
+const polybius = require("../src/polybius")
+​
+describe("polybius()", () => {
+    it("Should encode the message successfully", () => {
+        const expected = "4432423352125413"
+        const actual = polybius("Thinkful")
+        expect(actual).to.equal(expected)
+    })
+​
+    it("When encoding, your output should still be a string", () => {
+        const actual = polybius("Thinkful")
+        expect(actual).to.be.a("string")
+    })
+    
+    it("When decoding, the number of characters in the string excluding spaces should be even. Otherwise, return false", () => {
+        const actual = polybius("44324233521254134", false)
+        expect(actual).to.be.false
+​
+        const altActual = polybius("44324233521254134 2543241341", false)
+        expect(altActual).to.be.false
+    })
+​
+    it("Spaces should be maintained throughout", () => {
+        const expected = '3251131343 2543241341'
+        const actual = polybius("hello world")
+        expect(actual).to.equal(expected)
+​
+        const altExpected = "hello world"
+        const altActual = polybius('3251131343 2543241341', false)
+        expect(altActual).to.equal(altExpected)
+    })
+​
+    it("Capital letters can be ignored", () => {
+        const expected = '3251131343 2543241341'
+        const actual = polybius("Hello world")
+        expect(actual).to.equal(expected)
+    })
+​
+    it("The letters \"I\" and \"J\" share a space. When encoding, both letters can be converted to 42, but when decoding, both letters should somehow be shown", () => {
+        const expected = "th(i/j)nkful"
+        const actual = polybius("4432423352125413", false)
+        expect(actual).to.equal(expected)
+    })
+})

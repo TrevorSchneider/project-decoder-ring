@@ -1,87 +1,77 @@
-const grid = [
-  {letter: "a", code: "11"},
-  {letter: "b", code: "21"},
-  {letter: "c", code: "31"},
-  {letter: "d", code: "41"},
-  {letter: "e", code: "51"},
-  {letter: "f", code: "12"},
-  {letter: "g", code: "22"},
-  {letter: "h", code: "32"},
-  {letter: "i", code: "42"},
-  {letter: "j", code: "42"},
-  {letter: "k", code: "52"},
-  {letter: "l", code: "13"},
-  {letter: "m", code: "23"},
-  {letter: "n", code: "33"},
-  {letter: "o", code: "43"},
-  {letter: "p", code: "53"},
-  {letter: "q", code: "14"},
-  {letter: "r", code: "24"},
-  {letter: "s", code: "34"},
-  {letter: "t", code: "44"},
-  {letter: "u", code: "54"},
-  {letter: "v", code: "15"},
-  {letter: "w", code: "25"},
-  {letter: "x", code: "35"},
-  {letter: "y", code: "45"},
-  {letter: "z", code: "55"},
-];
-
+const alphabet = "abcdefghijklmnopqrstuvwxyz"
+function getCol(letter) {
+    // Get the index value of the letter
+    let letterVal = alphabet.indexOf(letter)
+    // For letters "j" and "k", subtract the index value by one, so "i" and "j" are the same value, and k takes "j"'s value, keeping to the grid
+    if(letter === "j" || letter === "k"){
+    letterVal--
+  }
+  // If the letter's index value is less than or equal to ten, take the modulus of five and add by 1. For index values above ten, check if the the modulus of five equals zero, if so change to five, otherwise return the modulus of five.
+  let col = letterVal <= 10 ? (letterVal%5 + 1) : (letterVal%5 === 0 ? 5 : letterVal%5)
+  return col
+}
+function getRow(letter){
+    // Get the index value of the letter
+    const letterVal = alphabet.indexOf(letter)
+    // Using the letter's index value, check if the modulus of five is zero, if so return the rounded down quotient of five, otherwise if there is a remainder, add one to the quotient
+    let row = letterVal%5 === 0 ? Math.floor(letterVal/5) : Math.floor(letterVal/5) + 1
+    if(letterVal === 0 || letterVal === 5) row += 1
+    return row
+}
+function getNum(letter){
+    const col = getCol(letter)
+    const row = getRow(letter)
+    return num = `${col}${row}`
+}
 function polybius(input, encode = true) {
-  // the letter codes are in pairs so a string to be decoded has to be even excluding whitespace
-  if (!encode && input.replace(/\s/g, "").length % 2 !== 0) {  
-    return false;
-  }
-
-  if (input && encode) {
-    return encodeMessage(input.toLowerCase());
-  }
-  
-  if (input && !encode) {
-    return decodeMessage(input.toLowerCase());
-  }
-}
-
-function encodeMessage(input) {
-  let output = "";
-  for (let i = 0; i < input.length; i++) {
-    // any letters being passed in should be lower case (97 - 122 in ascii)
-    // leave anything else as is
-    const code = input.charCodeAt(i);
-    if (code > 96 && code < 123) {
-      output += grid.find(item => item.letter === input[i]).code;
-    } else {
-      output += input[i];
-    }
-  }
-  return output;
-}
-
-function decodeMessage(input) {
-  let output = "";
-  // if the input contains spaces we don't want to use them when decoding
-  let encoded = input.split(" ");
-  encoded.forEach(chunk => {
-    // split numbers into pairs for decoding
-    let pairs = chunk.match(/\d{2}/g);
-    pairs.forEach(pair => {
-      // handle this special case separately
-      if (pair === "42") {
-        output += "(i/j)";
-      // everything else can be looked up
-      } else {
-        const letter = grid.find(item => item.code === pair).letter;
-        // if the pair isn't in the grid throw it away
-        if (letter.length) {
-          output += letter;
+    // Create a "input" variable to convert all letters in the input to lowercase; and an alphabet object
+    input = input.toLowerCase()
+    // create an empty variable for the resulting input
+    let result = ""
+    if (encode) {
+        // If the message is being encoded, check each character in the input. If the character is a space, return a space, otherwise return the two-digit code for the letter
+        for(characters in input) {
+            let character = input[characters]
+            result+= character === " " ? character : getNum(character)
         }
-      }
-    });
-    // put the spaces back in the simplest albeit clunkiest way
-    output += " ";
-  });
-  // get rid of the extra whitespace due to the above clunkiness
-  return output.trim();
+    }
+    else {
+        // If the message is being decoded, create an array of the encrypted numbers
+        const encryptionArray = input.split(" ")
+        for(numbers in encryptionArray) {
+            // Get each encrypted word
+            let word = encryptionArray[numbers]
+            // Figure out if this word is the last word in the array
+            const lastWord = encryptionArray[encryptionArray.length - 1]
+            // Create a variable to add a space between words
+            const addSpace = word != lastWord ? true : false
+            // If the encrypted word has an odd number of numbers, return false and end the evaluation
+            if(word.length%2 != 0) {
+                result = false
+                break
+            }
+            
+            // While the word hasn't been completely dissolved, isolate the first two numbers, if the numbers equal 42, return i/j, otherwise go through the alphabet and find out which letter it relates to. Delete this number pairing after solving and add the letter to the resulting string
+            while (word.length > 0) {
+                let wordSection = word.substr(0,2)
+                if (wordSection == 42) {
+                    result += "(i/j)"
+                    word = word.slice(2)
+                    continue
+                }
+                for(letters in alphabet){
+                    // Sort through each letter in the alphabet, obtain its 2-digit code, and compare
+                    let letter = getNum(alphabet[letters])
+                    // Once a match is found, add the letter to the resulting
+                    if(letter == wordSection) result += alphabet[letters]
+                    
+                }
+                word = word.slice(2)
+            }
+            // If the decrypted word was not the last word in the array, add a space
+            if(addSpace) result += " "
+        }
+    }
+    return result
 }
-
 module.exports = polybius;
